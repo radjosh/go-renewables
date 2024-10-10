@@ -18,7 +18,11 @@ func connect() (*pgx.Conn, error) {
 	if err != nil {
 		panic(err)
 	}
-	sqlURL := "postgres://" + cfg.User + ":" + cfg.Password + "@172.18.0.3:5432/go"
+	sqlURL := "postgres://" + 
+		   cfg.User + 
+		   ":" + 
+		   cfg.Password + 
+		   "@172.18.0.3:5432/go"
 	conn, err := pgx.Connect(context.Background(), sqlURL)
 	if err != nil {
 		return nil, err
@@ -47,7 +51,7 @@ func queryData(conn *pgx.Conn) {
 
 
 func main() {
-	conn, err := connect() // should we send it cfg? how w/o mixing named and unnamed params?
+	conn, err := connect()
 	if err != nil {
 		panic(err)
 	}
