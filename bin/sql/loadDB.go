@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
+
 	"github.com/caarlos0/env/v6"
+	"github.com/jackc/pgx/v5"
 )
 
 type Config struct {
@@ -32,20 +33,21 @@ func connect() (*pgx.Conn, error) {
 
 func queryData(conn *pgx.Conn) {
 	rows, err := conn.Query(context.Background(),
-		"SELECT * from test")
+		"SELECT Country, Year, EnergyType from energy")
 	if err != nil {
 		panic(err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var bar int
-		var baz int
-		err := rows.Scan(&bar, &baz)
+		var Country string
+		var Year int
+		var EnergyType string
+		err := rows.Scan(&Country, &Year, &EnergyType)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("BAR: %d, BAZ: %d\n", bar, baz)
+		fmt.Printf("Country: %s, Year: %d, Energy Type\n", Country, Year, EnergyType)
 	}
 }
 
