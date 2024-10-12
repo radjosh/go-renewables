@@ -47,7 +47,7 @@ func queryData(conn *pgx.Conn) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("Country: %s, Year: %d, Energy Type\n", Country, Year, EnergyType)
+		fmt.Printf("Country: %s, Year: %d, Energy Type: %s\n", Country, Year, EnergyType)
 	}
 }
 
