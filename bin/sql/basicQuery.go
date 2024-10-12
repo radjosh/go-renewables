@@ -51,12 +51,10 @@ func queryData(conn *pgx.Conn) {
 	}
 }
 
-
 func main() {
 	conn, err := connect()
 	if err != nil {
 		panic(err)
 	}
 	queryData(conn)
-
 }
