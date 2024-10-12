@@ -1,46 +1,60 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
+	"context"
 	"fmt"
-	"net/http"
-	"os"
+
+	"github.com/caarlos0/env/v6"
+	"github.com/jackc/pgx/v5"
 )
 
-type Row struct {
-	Country string
-	Year string
-	EnergyType string
+type Config struct {
+	User string `env:"DB_USER,required"`
+	Password string `env:"DB_PASSWORD,required"`
 }
 
-var Rows = make(map[string]Row)
+func connect() (*pgx.Conn, error) {
+	cfg := Config{}
+	err := env.Parse(&cfg)
+	if err != nil {
+		panic(err)
+	}
+	sqlURL := "postgres://" + 
+		   cfg.User + 
+		   ":" + 
+		   cfg.Password + 
+		   "@172.18.0.3:5432/go" // url provided by docker network
+	conn, err := pgx.Connect(context.Background(), sqlURL)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
 
-func getData(w http.ResponseWriter, r *http.Request) {
-	rowPtr := new(Row)
-	rowPtr.Country = "USA"
-	rowPtr.Year = "1993"
-	rowPtr.EnergyType = "nuclear"
-	Rows[rowPtr.Country] = *rowPtr
-	rowPtr = new(Row)
-	rowPtr.Country = "Germany"
-	rowPtr.Year = "2024"
-	rowPtr.EnergyType = "fusion"
-	Rows[rowPtr.Country] = *rowPtr
+func queryData(conn *pgx.Conn) {
+	rows, err := conn.Query(context.Background(),
+		"SELECT Country, Year, EnergyType from energy")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(Rows)
+	for rows.Next() {
+		var Country string
+		var Year int
+		var EnergyType string
+		err := rows.Scan(&Country, &Year, &EnergyType)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Country: %s, Year: %d, Energy Type: %s\n", Country, Year, EnergyType)
+	}
 }
 
 func main() {
-	http.HandleFunc("/getData", getData)
-	err := http.ListenAndServe(":8080", nil)
-	if errors.Is(err, http.ErrServerClosed) {
-		fmt.Println("server closed")
-	} else if err != nil {
-		fmt.Printf("error starting server: %s\n", err)
-		os.Exit(1)
+	conn, err := connect()
+	if err != nil {
+		panic(err)
 	}
+	queryData(conn)
 }
