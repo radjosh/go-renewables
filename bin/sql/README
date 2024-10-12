@@ -1,0 +1,3 @@
+sql dir is for loading db or testing db
+
+the app should live in /go/src instead
