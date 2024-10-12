@@ -23,7 +23,7 @@ func connect() (*pgx.Conn, error) {
 		   cfg.User + 
 		   ":" + 
 		   cfg.Password + 
-		   "@172.18.0.3:5432/go"
+		   "@172.18.0.3:5432/go" // url provided by docker network
 	conn, err := pgx.Connect(context.Background(), sqlURL)
 	if err != nil {
 		return nil, err
