@@ -12,12 +12,37 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+/*********************
+ *
+ * some things about the data:
+ *
+ * complete list of countries:
+ Australia
+ Brazil
+ Canada
+ China
+ France
+ Germany
+ India
+ Japan
+ Russia
+ USA
+ * complete list of EnergyTypes:
+ Geothermal
+ Biomass
+ Wind
+ Solar
+ Hydro
+ * complete list of years:
+years are 200-2023 inclusive
+*/
+ 
 type Config struct {
 	User     string `env:"DB_USER,required"`
 	Password string `env:"DB_PASSWORD,required"`
 }
 
-type DataPoint struct {
+type BigDataPoint struct {
 	Country                             string
 	Year                                int
 	EnergyType                          string
@@ -94,7 +119,7 @@ func connect() (*pgx.Conn, error) {
 	return conn, nil
 }
 
-func queryData(conn *pgx.Conn, dataPoints *[]DataPoint) {
+func bigQuery(conn *pgx.Conn, dataPoints *[]BigDataPoint) {
 	rows, err := conn.Query(context.Background(),
 		`SELECT 
 		Country, 
@@ -160,7 +185,7 @@ func queryData(conn *pgx.Conn, dataPoints *[]DataPoint) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var dataPoint DataPoint
+		var dataPoint BigDataPoint
 
 		err := rows.Scan(
 			&dataPoint.Country,
@@ -227,14 +252,14 @@ func queryData(conn *pgx.Conn, dataPoints *[]DataPoint) {
 	}
 }
 
-func query(w http.ResponseWriter, r *http.Request) {
-	var dataPoints []DataPoint
+func runBigQuery(w http.ResponseWriter, r *http.Request) {
+	var dataPoints []BigDataPoint
 
 	conn, err := connect()
 	if err != nil {
 		panic(err)
 	}
-	queryData(conn, &dataPoints) //slices pass by ref but they dont modify the original unless you sent a pointer or return and assign
+	bigQuery(conn, &dataPoints) //slices pass by ref but they dont modify the original unless you sent a pointer or return and assign
 	fmt.Println(len(dataPoints))
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -243,7 +268,7 @@ func query(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/query", query)
+	http.HandleFunc("/bigquery", runBigQuery)
 	err := http.ListenAndServe(":8080", nil)
 	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Println("server closed")
